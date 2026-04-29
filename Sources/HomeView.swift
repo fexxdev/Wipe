@@ -4,23 +4,25 @@ import ApplicationServices
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
     @State private var hasAccessibility = AXIsProcessTrusted()
+    @State private var isCheckingAccess = false
+    @State private var pollTimer: Timer?
 
     var body: some View {
-        VStack(spacing: 32) {
+        VStack(spacing: 24) {
             Spacer()
 
             Image(systemName: "sparkles")
-                .font(.system(size: 56))
+                .font(.system(size: 48))
                 .foregroundStyle(.tertiary)
 
             Text("Wipe")
-                .font(.system(size: 44, weight: .bold, design: .rounded))
+                .font(.system(size: 40, weight: .bold, design: .rounded))
 
             Text("Screen & Keyboard Cleaner")
                 .font(.title3)
                 .foregroundStyle(.secondary)
 
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 Label("Screen goes fullscreen at max brightness", systemImage: "sun.max")
                 Label("Keyboard is locked while cleaning", systemImage: "keyboard")
                 Label("Click anywhere to cycle colors", systemImage: "paintpalette")
@@ -30,15 +32,25 @@ struct HomeView: View {
             .foregroundStyle(.secondary)
 
             if !hasAccessibility {
-                VStack(spacing: 8) {
-                    Text("Accessibility access required to lock keyboard")
-                        .font(.callout.weight(.medium))
-                        .foregroundStyle(.orange)
-
-                    Button("Grant Access") {
-                        promptAccessibility()
+                if isCheckingAccess {
+                    VStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Waiting for Accessibility access...")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
                     }
-                    .buttonStyle(.bordered)
+                } else {
+                    VStack(spacing: 8) {
+                        Text("Accessibility access required to lock keyboard")
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(.orange)
+
+                        Button("Grant Access") {
+                            promptAccessibility()
+                        }
+                        .buttonStyle(.bordered)
+                    }
                 }
             }
 
@@ -54,10 +66,14 @@ struct HomeView: View {
 
             Spacer()
         }
-        .padding(40)
+        .padding(.horizontal, 40)
+        .padding(.vertical, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             hasAccessibility = AXIsProcessTrusted()
+        }
+        .onDisappear {
+            stopPolling()
         }
     }
 
@@ -65,8 +81,22 @@ struct HomeView: View {
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         let options = [key: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            hasAccessibility = AXIsProcessTrusted()
+        isCheckingAccess = true
+        startPolling()
+    }
+
+    private func startPolling() {
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            if AXIsProcessTrusted() {
+                hasAccessibility = true
+                isCheckingAccess = false
+                stopPolling()
+            }
         }
+    }
+
+    private func stopPolling() {
+        pollTimer?.invalidate()
+        pollTimer = nil
     }
 }

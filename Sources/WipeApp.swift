@@ -15,9 +15,9 @@ struct WipeApp: App {
                 }
             }
             .environmentObject(appState)
-            .frame(minWidth: 480, minHeight: 360)
+            .frame(minWidth: 480, minHeight: 520)
         }
-        .defaultSize(width: 480, height: 360)
+        .defaultSize(width: 480, height: 520)
     }
 }
 
