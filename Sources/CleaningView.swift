@@ -29,7 +29,7 @@ struct CleaningView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Text(formatTime(appState.elapsedTime))
+                    Text(formatCleaningTime(appState.elapsedTime))
                         .font(.system(.caption, design: .monospaced))
                         .foregroundStyle(textColor)
                         .opacity(0.3)
@@ -62,21 +62,15 @@ struct CleaningView: View {
         appState.currentColor == .white ? .black : .white
     }
 
-    private func formatTime(_ t: TimeInterval) -> String {
-        let m = Int(t) / 60
-        let s = Int(t) % 60
-        return String(format: "%d:%02d", m, s)
-    }
-
     private func enterFullScreen() {
-        guard let window = NSApplication.shared.windows.first else { return }
+        guard let window = NSApp.keyWindow ?? NSApp.windows.first else { return }
         if !window.styleMask.contains(.fullScreen) {
             window.toggleFullScreen(nil)
         }
     }
 
     private func exitFullScreen() {
-        guard let window = NSApplication.shared.windows.first else { return }
+        guard let window = NSApp.keyWindow ?? NSApp.windows.first else { return }
         if window.styleMask.contains(.fullScreen) {
             window.toggleFullScreen(nil)
         }

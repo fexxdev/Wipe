@@ -24,6 +24,12 @@ enum CleaningColor: CaseIterable {
     }
 }
 
+func formatCleaningTime(_ t: TimeInterval) -> String {
+    let m = Int(t) / 60
+    let s = Int(t) % 60
+    return String(format: "%d:%02d", m, s)
+}
+
 @MainActor
 class AppState: ObservableObject {
     @Published var isCleaning = false
@@ -36,6 +42,11 @@ class AppState: ObservableObject {
     let brightnessManager = BrightnessManager()
 
     private var timer: Timer?
+    private var fadeTask: Task<Void, Never>?
+
+    init() {
+        brightnessManager.recoverIfNeeded()
+    }
 
     func startCleaning() {
         isCleaning = true
@@ -66,8 +77,9 @@ class AppState: ObservableObject {
             }
         )
 
-        Task {
+        fadeTask = Task {
             try? await Task.sleep(for: .seconds(5))
+            guard !Task.isCancelled else { return }
             withAnimation(.easeOut(duration: 1)) {
                 showInstructions = false
             }
@@ -78,6 +90,8 @@ class AppState: ObservableObject {
         isCleaning = false
         timer?.invalidate()
         timer = nil
+        fadeTask?.cancel()
+        fadeTask = nil
         unlockProgress = 0
         keyboardManager.stop()
         brightnessManager.restoreBrightness()

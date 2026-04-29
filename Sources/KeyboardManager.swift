@@ -99,7 +99,7 @@ class KeyboardManager {
             holdStartTime = nil
             holdTimer?.invalidate()
             holdTimer = nil
-            DispatchQueue.main.async { self.onUnlockProgress?(0) }
+            DispatchQueue.main.async { [weak self] in self?.onUnlockProgress?(0) }
         }
     }
 
