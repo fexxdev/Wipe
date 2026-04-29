@@ -4,7 +4,7 @@ class StatsManager: ObservableObject {
     static let shared = StatsManager()
 
     // Replace with your Cloudflare Worker URL after deploying worker/wipe-analytics.js
-    static let analyticsBaseURL = "https://YOUR_WORKER.workers.dev"
+    static let analyticsBaseURL = "https://wipe-analytics.fexxdev.workers.dev"
 
     // Local stats
     @Published var totalSessions: Int

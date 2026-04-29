@@ -1,7 +1,8 @@
 name = "wipe-analytics"
 main = "wipe-analytics.js"
 compatibility_date = "2024-01-01"
+account_id = "0b04e7444c32f35980059ed7e70cd32e"
 
 [[kv_namespaces]]
 binding = "WIPE_STATS"
-id = "YOUR_KV_NAMESPACE_ID"
+id = "dc78ebe7f0144ef4ab1827c0d5954f8f"
