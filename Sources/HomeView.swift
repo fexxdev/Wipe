@@ -7,20 +7,23 @@ struct HomeView: View {
     @State private var isCheckingAccess = false
     @State private var pollTimer: Timer?
     @State private var showStats = false
+    @State private var hasPromptedOnce = false
 
     var body: some View {
         VStack(spacing: 24) {
-            HStack {
-                Spacer()
-                Button { showStats = true } label: {
-                    Image(systemName: "chart.bar")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
+            if hasAccessibility {
+                HStack {
+                    Spacer()
+                    Button { showStats = true } label: {
+                        Image(systemName: "chart.bar")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help("Stats")
                 }
-                .buttonStyle(.plain)
-                .help("Stats")
+                .padding(.bottom, -16)
             }
-            .padding(.bottom, -16)
 
             Image(systemName: "sparkles")
                 .font(.system(size: 48))
@@ -93,7 +96,10 @@ struct HomeView: View {
     }
 
     private func promptAccessibility() {
-        resetStaleEntry()
+        if hasPromptedOnce {
+            resetStaleEntry()
+        }
+        hasPromptedOnce = true
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         let options = [key: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
