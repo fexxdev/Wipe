@@ -7,3 +7,5 @@ xcuserdata/
 DerivedData/
 Wipe.app/
 scripts/__pycache__/
+*.dmg
+.dmg-stage/
