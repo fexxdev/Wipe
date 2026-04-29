@@ -9,3 +9,5 @@ Wipe.app/
 scripts/__pycache__/
 *.dmg
 .dmg-stage/
+worker/.env
+worker/wrangler.local.toml

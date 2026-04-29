@@ -1,8 +1,10 @@
 name = "wipe-analytics"
 main = "wipe-analytics.js"
 compatibility_date = "2024-01-01"
-account_id = "0b04e7444c32f35980059ed7e70cd32e"
+# Set CLOUDFLARE_ACCOUNT_ID env var or uncomment below:
+# account_id = ""
 
 [[kv_namespaces]]
 binding = "WIPE_STATS"
-id = "dc78ebe7f0144ef4ab1827c0d5954f8f"
+# Set after running: wrangler kv namespace create WIPE_STATS
+id = ""
