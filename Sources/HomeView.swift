@@ -71,6 +71,9 @@ struct HomeView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             hasAccessibility = AXIsProcessTrusted()
+            if !hasAccessibility {
+                promptAccessibility()
+            }
         }
         .onDisappear {
             stopPolling()
