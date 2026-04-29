@@ -18,13 +18,37 @@ struct StatsView: View {
                 .buttonStyle(.plain)
             }
 
-            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
+            // Your stats
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Your Stats")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+
+            Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 10) {
                 statRow("Sessions", value: "\(stats.totalSessions)")
                 statRow("Total time", value: formatDuration(stats.totalCleaningTime))
                 statRow("Average session", value: formatDuration(stats.averageSession))
                 statRow("Longest session", value: formatDuration(stats.longestSession))
                 statRow("Favorite color", value: stats.favoriteColor)
                 statRow("Using since", value: formatDate(stats.firstLaunchDate))
+            }
+
+            if stats.analyticsEnabled && stats.globalLaunches > 0 {
+                Divider()
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Community")
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+
+                Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 10) {
+                    statRow("Total launches", value: "\(stats.globalLaunches)")
+                    statRow("Active today", value: "\(stats.todayActive)")
+                    statRow("Sessions worldwide", value: "\(stats.globalSessions)")
+                    statRow("Global cleaning time", value: formatDuration(stats.globalCleaningTime))
+                }
             }
 
             Divider()
@@ -35,12 +59,15 @@ struct StatsView: View {
             ))
             .font(.callout)
 
-            Text("Only counts app launches — no personal data collected")
+            Text("Counts launches and cleaning time — no personal data")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(24)
-        .frame(width: 320)
+        .frame(width: 340)
+        .onAppear {
+            stats.fetchGlobalStats()
+        }
     }
 
     private func statRow(_ label: String, value: String) -> some View {

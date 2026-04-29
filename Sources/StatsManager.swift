@@ -1,20 +1,24 @@
 import Foundation
 
-struct CleaningSession: Codable {
-    let date: Date
-    let duration: TimeInterval
-    let color: String
-}
-
 class StatsManager: ObservableObject {
     static let shared = StatsManager()
 
+    // Replace with your Cloudflare Worker URL after deploying worker/wipe-analytics.js
+    static let analyticsBaseURL = "https://YOUR_WORKER.workers.dev"
+
+    // Local stats
     @Published var totalSessions: Int
     @Published var totalCleaningTime: TimeInterval
     @Published var longestSession: TimeInterval
     @Published var colorCounts: [String: Int]
     @Published var firstLaunchDate: Date
     @Published var analyticsEnabled: Bool
+
+    // Global stats (fetched from server)
+    @Published var globalLaunches: Int = 0
+    @Published var globalSessions: Int = 0
+    @Published var globalCleaningTime: TimeInterval = 0
+    @Published var todayActive: Int = 0
 
     private let defaults = UserDefaults.standard
 
@@ -37,7 +41,7 @@ class StatsManager: ObservableObject {
         }
 
         if analyticsEnabled {
-            sendLaunchPing()
+            postFireAndForget("/launch")
         }
     }
 
@@ -52,6 +56,10 @@ class StatsManager: ObservableObject {
         colorCounts[key, default: 0] += 1
 
         save()
+
+        if analyticsEnabled {
+            postFireAndForget("/session", body: ["duration": duration])
+        }
     }
 
     var favoriteColor: String {
@@ -67,6 +75,25 @@ class StatsManager: ObservableObject {
         defaults.set(enabled, forKey: "stats.analyticsEnabled")
     }
 
+    func fetchGlobalStats() {
+        guard analyticsEnabled else { return }
+        guard let url = URL(string: "\(Self.analyticsBaseURL)/stats") else { return }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 5
+
+        URLSession.shared.dataTask(with: request) { [weak self] data, _, _ in
+            guard let data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else { return }
+            DispatchQueue.main.async {
+                self?.globalLaunches = json["launches"] as? Int ?? 0
+                self?.globalSessions = json["totalSessions"] as? Int ?? 0
+                self?.globalCleaningTime = json["totalCleaningTimeSeconds"] as? Double ?? 0
+                self?.todayActive = json["todayActive"] as? Int ?? 0
+            }
+        }.resume()
+    }
+
     private func save() {
         defaults.set(totalSessions, forKey: "stats.totalSessions")
         defaults.set(totalCleaningTime, forKey: "stats.totalCleaningTime")
@@ -76,15 +103,16 @@ class StatsManager: ObservableObject {
         }
     }
 
-    private func sendLaunchPing() {
-        // Anonymous launch ping — no device ID, no user data, just a counter hit.
-        // Set your own endpoint (e.g. Cloudflare Worker, Vercel function).
-        // Example Worker: addEventListener("fetch", e => { count++; return new Response("ok") })
-        guard let url = URL(string: "https://YOUR_ENDPOINT/wipe/launch") else { return }
+    private func postFireAndForget(_ path: String, body: [String: Any]? = nil) {
+        guard let url = URL(string: "\(Self.analyticsBaseURL)\(path)") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Wipe/1.0.0", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 5
+        request.setValue("Wipe/1.0.0", forHTTPHeaderField: "User-Agent")
+        if let body {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        }
         URLSession.shared.dataTask(with: request).resume()
     }
 }
