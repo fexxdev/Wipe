@@ -6,10 +6,21 @@ struct HomeView: View {
     @State private var hasAccessibility = AXIsProcessTrusted()
     @State private var isCheckingAccess = false
     @State private var pollTimer: Timer?
+    @State private var showStats = false
 
     var body: some View {
         VStack(spacing: 24) {
-            Spacer()
+            HStack {
+                Spacer()
+                Button { showStats = true } label: {
+                    Image(systemName: "chart.bar")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("Stats")
+            }
+            .padding(.bottom, -16)
 
             Image(systemName: "sparkles")
                 .font(.system(size: 48))
@@ -75,6 +86,9 @@ struct HomeView: View {
         }
         .onDisappear {
             stopPolling()
+        }
+        .sheet(isPresented: $showStats) {
+            StatsView()
         }
     }
 

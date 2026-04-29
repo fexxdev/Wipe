@@ -87,6 +87,9 @@ class AppState: ObservableObject {
     }
 
     func stopCleaning() {
+        let duration = elapsedTime
+        let color = currentColor
+
         isCleaning = false
         timer?.invalidate()
         timer = nil
@@ -96,6 +99,10 @@ class AppState: ObservableObject {
         keyboardManager.stop()
         brightnessManager.restoreBrightness()
         NSSound(named: "Glass")?.play()
+
+        if duration > 1 {
+            StatsManager.shared.recordSession(duration: duration, dominantColor: color)
+        }
     }
 
     func cycleColor() {
