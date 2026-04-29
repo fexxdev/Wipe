@@ -1,12 +1,11 @@
 import Foundation
 
+@MainActor
 class StatsManager: ObservableObject {
     static let shared = StatsManager()
 
-    // Replace with your Cloudflare Worker URL after deploying worker/wipe-analytics.js
-    static let analyticsBaseURL = "https://wipe-analytics.fexxdev.workers.dev"
+    nonisolated static let analyticsBaseURL = "https://wipe-analytics.fexxdev.workers.dev"
 
-    // Local stats
     @Published var totalSessions: Int
     @Published var totalCleaningTime: TimeInterval
     @Published var longestSession: TimeInterval
@@ -14,7 +13,6 @@ class StatsManager: ObservableObject {
     @Published var firstLaunchDate: Date
     @Published var analyticsEnabled: Bool
 
-    // Global stats (fetched from server)
     @Published var globalLaunches: Int = 0
     @Published var globalSessions: Int = 0
     @Published var globalCleaningTime: TimeInterval = 0
@@ -81,17 +79,15 @@ class StatsManager: ObservableObject {
         var request = URLRequest(url: url)
         request.timeoutInterval = 5
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, _, _ in
-            guard let data,
+        Task {
+            guard let (data, _) = try? await URLSession.shared.data(for: request),
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
             else { return }
-            DispatchQueue.main.async {
-                self?.globalLaunches = json["launches"] as? Int ?? 0
-                self?.globalSessions = json["totalSessions"] as? Int ?? 0
-                self?.globalCleaningTime = json["totalCleaningTimeSeconds"] as? Double ?? 0
-                self?.todayActive = json["todayActive"] as? Int ?? 0
-            }
-        }.resume()
+            globalLaunches = json["launches"] as? Int ?? 0
+            globalSessions = json["totalSessions"] as? Int ?? 0
+            globalCleaningTime = json["totalCleaningTimeSeconds"] as? Double ?? 0
+            todayActive = json["todayActive"] as? Int ?? 0
+        }
     }
 
     private func save() {
@@ -103,7 +99,7 @@ class StatsManager: ObservableObject {
         }
     }
 
-    private func postFireAndForget(_ path: String, body: [String: Any]? = nil) {
+    private nonisolated func postFireAndForget(_ path: String, body: [String: Any]? = nil) {
         guard let url = URL(string: "\(Self.analyticsBaseURL)\(path)") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

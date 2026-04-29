@@ -27,7 +27,7 @@ class KeyboardManager {
             options: .defaultTap,
             eventsOfInterest: mask,
             callback: { _, type, event, refcon -> Unmanaged<CGEvent>? in
-                guard let refcon else { return Unmanaged.passRetained(event) }
+                guard let refcon else { return Unmanaged.passUnretained(event) }
                 let mgr = Unmanaged<KeyboardManager>.fromOpaque(refcon).takeUnretainedValue()
                 return mgr.handle(type: type, event: event)
             },
@@ -64,8 +64,12 @@ class KeyboardManager {
 
     private func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            if !AXIsProcessTrusted() {
+                onUnlock?()
+                return Unmanaged.passUnretained(event)
+            }
             if let tap = eventTap { CGEvent.tapEnable(tap: tap, enable: true) }
-            return Unmanaged.passRetained(event)
+            return Unmanaged.passUnretained(event)
         }
 
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
@@ -99,7 +103,7 @@ class KeyboardManager {
             holdStartTime = nil
             holdTimer?.invalidate()
             holdTimer = nil
-            DispatchQueue.main.async { [weak self] in self?.onUnlockProgress?(0) }
+            onUnlockProgress?(0)
         }
     }
 
@@ -108,10 +112,8 @@ class KeyboardManager {
         holdTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { [weak self] _ in
             guard let self, let start = self.holdStartTime else { return }
             let progress = min(Date().timeIntervalSince(start) / 7.0, 1.0)
-            DispatchQueue.main.async {
-                self.onUnlockProgress?(progress)
-                if progress >= 1.0 { self.performUnlock() }
-            }
+            self.onUnlockProgress?(progress)
+            if progress >= 1.0 { self.performUnlock() }
         }
     }
 
@@ -121,6 +123,6 @@ class KeyboardManager {
         holdStartTime = nil
         fnPressed = false
         returnPressed = false
-        DispatchQueue.main.async { self.onUnlock?() }
+        onUnlock?()
     }
 }

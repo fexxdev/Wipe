@@ -46,7 +46,7 @@ export default {
     if (request.method === "POST" && url.pathname === "/session") {
       const body = await request.json().catch(() => ({}));
       const duration = parseFloat(body.duration) || 0;
-      if (duration <= 0)
+      if (duration <= 0 || duration > 86400)
         return new Response(JSON.stringify({ error: "invalid" }), {
           status: 400,
           headers,

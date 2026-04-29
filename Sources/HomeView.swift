@@ -107,7 +107,6 @@ struct HomeView: View {
         task.launchPath = "/usr/bin/tccutil"
         task.arguments = ["reset", "Accessibility", bundleId]
         try? task.run()
-        task.waitUntilExit()
     }
 
     private func startPolling() {

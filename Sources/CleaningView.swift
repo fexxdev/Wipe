@@ -49,11 +49,10 @@ struct CleaningView: View {
             }
         }
         .onAppear {
-            NSCursor.hide()
+            NSCursor.setHiddenUntilMouseMoves(true)
             enterFullScreen()
         }
         .onDisappear {
-            NSCursor.unhide()
             exitFullScreen()
         }
     }
