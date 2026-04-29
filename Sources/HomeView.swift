@@ -39,6 +39,9 @@ struct HomeView: View {
                         Text("Waiting for Accessibility access...")
                             .font(.callout)
                             .foregroundStyle(.secondary)
+                        Text("If Wipe is already enabled, toggle it off and on")
+                            .font(.caption)
+                            .foregroundStyle(.secondary.opacity(0.7))
                     }
 
                     Button("Open Accessibility Settings") {
@@ -76,11 +79,21 @@ struct HomeView: View {
     }
 
     private func promptAccessibility() {
+        resetStaleEntry()
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         let options = [key: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
         isCheckingAccess = true
         startPolling()
+    }
+
+    private func resetStaleEntry() {
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.fexxdev.wipe"
+        let task = Process()
+        task.launchPath = "/usr/bin/tccutil"
+        task.arguments = ["reset", "Accessibility", bundleId]
+        try? task.run()
+        task.waitUntilExit()
     }
 
     private func startPolling() {
