@@ -79,6 +79,23 @@ pip3 install Pillow
 python3 scripts/generate_icon.py
 ```
 
+## Privacy & Analytics
+
+Wipe collects **completely anonymous** usage stats purely for fun — we just like seeing how much collective screen-cleaning the community does.
+
+What's collected (when enabled):
+- A launch counter (no device ID, no IP, no fingerprinting)
+- Cleaning session duration
+
+What's **never** collected:
+- Personal information of any kind
+- Device identifiers or IP addresses
+- Anything that could identify you
+
+You can **disable analytics entirely** from the Stats panel (click the chart icon in the app). When disabled, zero network requests are made.
+
+The stats are visible to everyone in the app's "Community" section — total launches, active users today, and global cleaning time across all Wipe users.
+
 ## How it works
 
 | Component | What it does |
