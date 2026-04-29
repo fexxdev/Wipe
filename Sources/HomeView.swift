@@ -32,25 +32,19 @@ struct HomeView: View {
             .foregroundStyle(.secondary)
 
             if !hasAccessibility {
-                if isCheckingAccess {
-                    VStack(spacing: 8) {
+                VStack(spacing: 8) {
+                    if isCheckingAccess {
                         ProgressView()
                             .controlSize(.small)
                         Text("Waiting for Accessibility access...")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
-                } else {
-                    VStack(spacing: 8) {
-                        Text("Accessibility access required to lock keyboard")
-                            .font(.callout.weight(.medium))
-                            .foregroundStyle(.orange)
 
-                        Button("Grant Access") {
-                            promptAccessibility()
-                        }
-                        .buttonStyle(.bordered)
+                    Button("Open Accessibility Settings") {
+                        promptAccessibility()
                     }
+                    .buttonStyle(.bordered)
                 }
             }
 
@@ -72,7 +66,8 @@ struct HomeView: View {
         .onAppear {
             hasAccessibility = AXIsProcessTrusted()
             if !hasAccessibility {
-                promptAccessibility()
+                isCheckingAccess = true
+                startPolling()
             }
         }
         .onDisappear {
